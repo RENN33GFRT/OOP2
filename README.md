@@ -25,4 +25,4 @@ pip install -r requirements.txt
 
 5 тестов проверяются успешно в которых описаны разные случаи ввода пользователя
 
-Code coverage 100%
+Code coverage 85%
