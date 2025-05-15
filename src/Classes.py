@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class AbstractProduct(ABC):
+class BaseProduct(ABC):
     """
     Абстрактный базовый класс для продуктов.
     Определяет интерфейс и общие свойства для всех продуктов.
@@ -12,11 +12,12 @@ class AbstractProduct(ABC):
         """
         Инициализация базовых свойств продукта.
         """
-        self.product_name = product_name
-        self.product_description = product_description
-        self.__product_price = product_price
-        self.product_quantity = product_quantity
+        self.name = product_name
+        self.description = product_description
+        self.price = product_price
+        self.quantity = product_quantity
 
+    @classmethod
     @abstractmethod
     def create_new_product(cls, params: dict):
         """
@@ -39,23 +40,21 @@ class AbstractProduct(ABC):
         pass
 
 
-class ProductMixin:
-    """
-    Миксин для логирования информации о продукте.
-    """
+class LoggingMixin:
+    """Миксин для логирования создания объектов"""
+
+    def __init__(self, *args, **kwargs):
+        print(f"Создан объект {self.__class__.__name__} с параметрами:")
+        print(f"Args: {args}")
+        print(f"Kwargs: {kwargs}")
+        super().__init__(*args)
 
     def __repr__(self):
-        self.log_product_details()
-
-    def log_product_details(self):
-        """
-        Выводит в консоль информацию о продукте.
-        """
-        print(
-            f"{self.__class__.__name__}({self.product_name}, {self.product_description}, {self._product_price}, {self.product_quantity})")
+        attrs = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
+        return f"{self.__class__.__name__}({attrs})"
 
 
-class Product(AbstractProduct, ProductMixin):
+class Product(BaseProduct, LoggingMixin):
     """
     Класс для представления товара с основными характеристиками.
     """
@@ -64,71 +63,64 @@ class Product(AbstractProduct, ProductMixin):
         """
         Инициализация товара и вызов метода логирования.
         """
-        self.product_name = product_name
-        self.product_description = product_description
-        self._product_price = product_price
-        self.product_quantity = product_quantity
-        super().__repr__()
+        super().__init__(product_name, product_description, product_price, product_quantity)
 
     def __str__(self):
         """
         Возвращает строковое описание товара.
         """
-        return f"{self.product_name}, {self._product_price} руб. Остаток: {self.product_quantity} шт."
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other):
         """
         Складывает стоимости двух товаров одинакового типа.
 
-        :param other: другой объект класса Product
+        :param other: Другой объект класса Product
         :return: сумма стоимости обоих товаров
         :raises TypeError: если объекты разных типов
         """
-        if isinstance(self, type(other)):
-            total_value_self = self._product_price * self.product_quantity
-            total_value_other = other._product_price * other.product_quantity
+        if isinstance(other, type(self)):
+            total_value_self = self.price * self.quantity
+            total_value_other = other.price * other.quantity
             return total_value_self + total_value_other
         else:
             raise TypeError("Можно складывать только товары одного типа.")
 
     @classmethod
-    def create_new_product(cls, params: dict):
+    def new_product(cls, params: dict):
         """
         Создает новый товар из словаря параметров.
 
         :param params: словарь с ключами 'name', 'description', 'price', 'quantity'
         :return: экземпляр класса Product
         """
-        name_, description_, price_, quantity_ = (
-            params["name"],
-            params["description"],
-            params["price"],
-            params["quantity"]
-        )
+        name_ = params["name"]
+        description_ = params["description"]
+        price_ = params["price"]
+        quantity_ = params["quantity"]
 
         return cls(name_, description_, price_, quantity_)
 
     @property
     def price(self):
         """Геттер для цены продукта."""
-        return self._product_price
+        return self.price
 
     @price.setter
     def price(self, new_price):
         """Сеттер для цены продукта с проверкой."""
+
+        # Проверка на неотрицательную цену
 
         if new_price <= 0:
             print("Цена не должна быть нулевой или отрицательной.")
             return
 
             # Предупреждение при снижении цены ниже предыдущей и подтверждение изменения пользователем.
-
-        if new_price < self._product_price:
+        if self.price < self.price:
             user_response = input("Вы ввели цену ниже прошлой. Подтвердите изменение цены (y/n): ")
             if user_response.lower() == "y":
-                self._product_price = new_price
-        else:
-            self._product_price = new_price
+                return
 
 
 class Category:
@@ -138,12 +130,12 @@ class Category:
     Атрибуты:
       - category_name: название категории
       - category_description: описание категории
-      - products_list: список продуктов в категории (приватный)
+      - __products_list: приватный список продуктов в категории
       - class-level счетчики количества категорий и продуктов
     """
 
-    total_products_count = 0  # Общее число добавленных продуктов во все категории
-    total_categories_count = 0  # Общее число созданных категорий
+    product_count = 0  # Общее число добавленных продуктов во все категории
+    category_count = 0  # Общее число созданных категорий
 
     def __init__(self, category_name, category_description, products=None):
         """
@@ -157,38 +149,38 @@ class Category:
             for prod in products:
                 self.add_product(prod)
 
-        Category.total_categories_count += 1
+        Category.category_count += 1
 
+    def __str__(self):
+        """
+        Строковое представление категории с подсчетом общего количества товаров.
+        """
+        total_items = sum(product.product_quantity for product in self.__products_list)
+        return f"{self.category_name}, количество товаров: {total_items} шт."
 
-def __str__(self):
-    """
-    Строковое представление категории с подсчетом общего количества товаров.
-    """
-    total_items = sum(product.product_quantity for product in self.__products_list)
-    return f"{self.category_name}, количество товаров: {total_items} шт."
+    def add_product(self, product_item):
+        """
+        Добавляет продукт в категорию после проверки типа.
 
+        :param product_item: Объект класса Product или его наследника
+        :raises TypeError: если объект не является экземпляром класса Product или его подкласса
+        """
 
-def add_product(self, product_item):
-    """
-    Добавляет продукт в категорию после проверки типа.
+        if not isinstance(product_item, Product) or not issubclass(type(product_item), Product):
+            raise TypeError("Можно добавлять только объекты типа Product или его подклассы.")
 
-    :param product_item: Объект класса Product или его наследника
-    :raises TypeError: если объект не является экземпляром класса Product или его подкласса
-    """
+        self.__products_list.append(product_item)
+        Category.product_count += 1
 
-    if not isinstance(product_item, Product) or not issubclass(type(product_item), Product):
-        raise TypeError("Можно добавлять только объекты типа Product или его подклассы.")
-
-    self.__products_list.append(product_item)
-    Category.total_products_count += 1
-
-
-@property
-def products(self):
-    """
-    Возвращает список строк с информацией о продуктах в категории.
-    """
-    return [f"{prod.name}, {prod.price} руб. Остаток: {prod.quantity} шт.\n" for prod in self.__products_list]
+    @property
+    def products(self):
+        """
+        Возвращает список строк с информацией о продуктах в категории.
+        """
+        return [
+            f"{prod.product_name}, {prod.price} руб. Остаток: {prod.product_quantity} шт."
+            for prod in self.__products_list
+        ]
 
 
 class Smartphone(Product):
@@ -197,14 +189,14 @@ class Smartphone(Product):
 
     Наследует основные свойства от класса Product и добавляет параметры эффективности,
      модели, памяти и цвета.
-     """
+    """
 
     def __init__(self, name, description, price, quantity, efficiency_level, model_code, memory_size, color_variant):
         super().__init__(name, description, price, quantity)
-        self.efficiency_level = efficiency_level  # уровень эффективности (например батареи)
-        self.model_code = model_code  # модель смартфона
-        self.memory_size = memory_size  # объем памяти
-        self.color_variant = color_variant  # цвет устройства
+        self.efficiency = efficiency_level  # уровень эффективности (например батареи)
+        self.model = model_code  # модель смартфона
+        self.memory = memory_size  # объем памяти (например ГБ)
+        self.color = color_variant  # цвет устройства
 
 
 class LawnGrass(Product):
@@ -215,10 +207,8 @@ class LawnGrass(Product):
     периода прорастания и цвета травы.
     """
 
-    def __init__(self, name, description, price, quantity,
-                 country_of_origin, germination_duration_days,
-                 grass_color):
+    def __init__(self, name, description, price, quantity, country_of_origin, germination_duration_days, grass_color):
         super().__init__(name, description, price, quantity)
-        self.country_of_origin = country_of_origin  # страна происхождения травы
-        self.germination_duration_days = germination_duration_days  # период прорастания (дней)
-        self.grass_color = grass_color  # цвет травы
+        self.country = country_of_origin  # страна происхождения травы
+        self.germination_period = germination_duration_days  # период прорастания (дней)
+        self.color = grass_color  # цвет травы
