@@ -14,8 +14,9 @@ class BaseProduct(ABC):
         """
         self.name = product_name
         self.description = product_description
-        self.price = product_price
+        self.__price = product_price
         self.quantity = product_quantity
+        super().__init__(product_name, product_description, product_price, product_quantity)
 
     @classmethod
     @abstractmethod
@@ -104,7 +105,7 @@ class Product(BaseProduct, LoggingMixin):
     @property
     def price(self):
         """Геттер для цены продукта."""
-        return self._price
+        return self.__price
 
     @price.setter
     def price(self, new_price):
