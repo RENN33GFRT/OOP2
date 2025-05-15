@@ -16,7 +16,6 @@ class BaseProduct(ABC):
         self.description = product_description
         self.__price = product_price
         self.quantity = product_quantity
-        super().__init__(product_name, product_description, product_price, product_quantity)
 
     @classmethod
     @abstractmethod
@@ -114,12 +113,13 @@ class Product(BaseProduct, LoggingMixin):
             print("Цена не должна быть нулевой или отрицательной.")
             return
 
-        if hasattr(self, '_price') and new_price < self._price:
+        if hasattr(self, '_Product__price') and new_price < self._Product__price:
             user_response = input("Вы ввели цену ниже прошлой. Подтвердите изменение цены (y/n): ")
             if user_response.lower() != "y":
+                print("Изменение цены отменено.")
                 return
 
-        self._price = new_price
+        self._Product__price = new_price
 
 
 class Category:
@@ -160,7 +160,7 @@ class Category:
 
 
 class Smartphone(Product):
-    def __init__(self, name, description, price, quantity, efficiency_level, model_code, memory_size, color_variant):
+    def __init__(self, name, description, price, quantity, efficiency_level=0, model_code='', memory_size=0, color_variant=''):
         super().__init__(name, description, price, quantity)
         self.efficiency = efficiency_level
         self.model = model_code
@@ -170,21 +170,20 @@ class Smartphone(Product):
     @classmethod
     def create_new_product(cls, params: dict):
         """Реализация абстрактного метода для Smartphone"""
-        base_params = {
-            'name': params['name'],
-            'description': params['description'],
-            'price': params['price'],
-            'quantity': params['quantity']
-        }
-        return cls(**base_params,
-                 efficiency_level=params.get('efficiency_level', 0),
-                 model_code=params.get('model_code', ''),
-                 memory_size=params.get('memory_size', 0),
-                 color_variant=params.get('color_variant', ''))
+        return cls(
+            name=params['name'],
+            description=params['description'],
+            price=params['price'],
+            quantity=params['quantity'],
+            efficiency_level=params.get('efficiency_level', 0),
+            model_code=params.get('model_code', ''),
+            memory_size=params.get('memory_size', 0),
+            color_variant=params.get('color_variant', '')
+        )
 
 
 class LawnGrass(Product):
-    def __init__(self, name, description, price, quantity, country_of_origin, germination_duration_days, grass_color):
+    def __init__(self, name, description, price, quantity, country_of_origin='', germination_duration_days=0, grass_color=''):
         super().__init__(name, description, price, quantity)
         self.country = country_of_origin
         self.germination_period = germination_duration_days
@@ -193,13 +192,12 @@ class LawnGrass(Product):
     @classmethod
     def create_new_product(cls, params: dict):
         """Реализация абстрактного метода для LawnGrass"""
-        base_params = {
-            'name': params['name'],
-            'description': params['description'],
-            'price': params['price'],
-            'quantity': params['quantity']
-        }
-        return cls(**base_params,
-                 country_of_origin=params.get('country_of_origin', ''),
-                 germination_duration_days=params.get('germination_duration_days', 0),
-                 grass_color=params.get('grass_color', ''))
+        return cls(
+            name=params['name'],
+            description=params['description'],
+            price=params['price'],
+            quantity=params['quantity'],
+            country_of_origin=params.get('country_of_origin', ''),
+            germination_duration_days=params.get('germination_duration_days', 0),
+            grass_color=params.get('grass_color', '')
+        )

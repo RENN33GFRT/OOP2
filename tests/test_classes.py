@@ -15,10 +15,10 @@ def smartphone():
         "256GB, Серый цвет, 200MP камера",
         180000.0,
         5,
-        95.5,
-        "S23 Ultra",
-        256,
-        "Серый"
+        efficiency_level=95.5,
+        model_code="S23 Ultra",
+        memory_size=256,
+        color_variant="Серый"
     )
 
 
@@ -29,9 +29,9 @@ def lawn_grass():
         "Элитная трава для газона",
         500.0,
         20,
-        "Россия",
-        7,
-        "Зеленый"
+        country_of_origin="Россия",
+        germination_duration_days=7,
+        grass_color="Зеленый"
     )
 
 
@@ -45,6 +45,10 @@ def category(product, smartphone):
 
 
 def test_count_category():
+    # Сбросим счетчики перед тестом
+    Category.category_count = 0
+    Category.product_count = 0
+
     product1 = Product.create_new_product({
         "name": "Samsung Galaxy S23 Ultra",
         "description": "256GB, Серый цвет, 200MP камера",
@@ -136,7 +140,7 @@ def test_product_price_set(mock_input, capsys):
     mock_input.return_value = "n"
     product.price = 800
     captured = capsys.readouterr()
-    assert "Изменение цены отменено." not in captured.out
+    assert "Изменение цены отменено." in captured.out
     assert product.price == 1000
 
 
@@ -216,3 +220,25 @@ def test_subclasses_product():
     assert grass1.country == "Россия"
     assert grass1.germination_period == 7
     assert grass1.color == "Зеленый"
+
+
+def test_create_with_missing_params():
+    # Тест создания Smartphone с неполными параметрами
+    smartphone = Smartphone.create_new_product({
+        "name": "Test Phone",
+        "description": "Test",
+        "price": 1000,
+        "quantity": 1
+    })
+    assert smartphone.efficiency == 0
+    assert smartphone.model == ""
+
+    # Тест создания LawnGrass с неполными параметрами
+    grass = LawnGrass.create_new_product({
+        "name": "Test Grass",
+        "description": "Test",
+        "price": 100,
+        "quantity": 1
+    })
+    assert grass.country == ""
+    assert grass.germination_period == 0
