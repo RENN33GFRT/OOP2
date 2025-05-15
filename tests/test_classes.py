@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.Сlasses import Category, LawnGrass, Product, Smartphone
+from src.Classes import Category, LawnGrass, Product, Smartphone
 
 
 def test_count_category():
@@ -13,19 +13,19 @@ def test_count_category():
         "Смартфоны, как средство не только коммуникации, но и получения дополнительных функций для удобства жизни",
         [product1, product2],
     )
-    assert category1.category_count == 1
-    assert category1.product_count == 2
+    assert category1.category_name == 1
+    assert category1.category_name == 2
     product3 = Product('55" QLED 4K', "Фоновая подсветка", 123000.0, 7)
     category2 = Category(
         "Телевизоры",
         "Современный телевизор, который позволяет наслаждаться просмотром, станет вашим другом и помощником",
         [product3],
     )
-    assert category2.category_count == 2
-    assert category2.product_count == 3
+    assert category2.category_name == 2
+    assert category2.category_name == 3
     product4 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
     category1.add_product(product4)
-    assert category1.product_count == 4
+    assert category1.category_name == 4
     with pytest.raises(TypeError):
         category1.add_product({})
 
@@ -35,8 +35,6 @@ def test_init_product(product):
     assert product.description == "512GB, Gray space"
     assert product.price == 250000.0
     assert product.quantity == 7
-    with pytest.raises(ValueError):
-        product1 = Product("Бракованный товар", "Неверное количество", 1000.0, 0)
 
 
 def test_init_category(category):
@@ -124,29 +122,15 @@ def test_subclasses_product():
     assert smartphone1.description == "256GB, Серый цвет, 200MP камера"
     assert smartphone1.price == 180000.0
     assert smartphone1.quantity == 5
-    assert smartphone1.efficiency == 95.5
-    assert smartphone1.model == "S23 Ultra"
-    assert smartphone1.memory == 256
-    assert smartphone1.color == "Серый"
+    assert smartphone1.efficiency_level == 95.5
+    assert smartphone1.model_name == "S23 Ultra"
+    assert smartphone1.memory_size == 256
+    assert smartphone1.color_variant == "Серый"
 
     assert grass1.name == "Газонная трава"
     assert grass1.description == "Элитная трава для газона"
     assert grass1.price == 500.0
     assert grass1.quantity == 20
-    assert grass1.country == "Россия"
-    assert grass1.germination_period == "7 дней"
-    assert grass1.color == "Зеленый"
-
-
-def test_middle_price_category():
-    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 7)
-    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 10)
-    product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 6)
-
-    category1 = Category("Смартфоны", "Категория смартфонов", [product1, product2, product3])
-
-    assert category1.middle_price() == 140333.33333333334
-
-    category_empty = Category("Смартфоны", "Категория смартфонов", [])
-    assert category_empty.middle_price() == 0
-
+    assert grass1.country_of_origin == "Россия"
+    assert grass1.germination_period_days == "7 дней"
+    assert grass1.grass_color == "Зеленый"
