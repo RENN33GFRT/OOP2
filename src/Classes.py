@@ -112,28 +112,28 @@ class Category:
         return f"{self.category_name}, количество продуктов: {total_quantity} шт."
 
 
-        def add_product(self, product):
-            """
-            Добавляет товар в категорию.
+    def add_product(self, product):
+        """
+        Добавляет товар в категорию.
 
-            :param product: Объект класса Product или его наследников.
-            :raises TypeError: Если переданный объект не является товаром.
-            """
-            if not isinstance(product, Product):
-                raise TypeError("Можно добавлять только объекты типа Product или его наследников.")
-            self.__products_list.append(product)
-            Category.product_count += 1
+        :param product: Объект класса Product или его наследников.
+        :raises TypeError: Если переданный объект не является товаром.
+        """
+        if not isinstance(product, Product):
+            raise TypeError("Можно добавлять только объекты типа Product или его наследников.")
+        self.__products_list.append(product)
+        Category.product_count += 1
 
 
-        @property
-        def products(self):
-            """
-            Возвращает список строк с информацией о каждом товаре в категории.
+    @property
+    def products(self):
+        """
+        Возвращает список строк с информацией о каждом товаре в категории.
 
-            :return: Список строк с именем, ценой и остатком товара.
-            """
-            return [
-                f"{prod.product_name}, {prod.price} руб. Остаток: {prod.product_quantity} шт.\n"
+        :return: Список строк с именем, ценой и остатком товара.
+        """
+        return [
+            f"{prod.product_name}, {prod.price} руб. Остаток: {prod.product_quantity} шт.\n"
                 for prod in self.__products_list
             ]
 
