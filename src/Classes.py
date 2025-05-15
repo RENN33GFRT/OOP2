@@ -1,5 +1,8 @@
 
 class Product:
+
+    def __repr__(self):
+        return f"Product(product_name='{self.product_name}', product_price={self.price}, product_quantity={self.product_quantity})"
     """
     Класс для представления товара.
     """
@@ -74,6 +77,9 @@ class Product:
 
 
 class Category:
+
+    def __repr__(self):
+        return f"Category(category_name='{self.category_name}', products_count={len(self._Category__products_list)})"
     """
     Класс для представления категории товаров.
     """

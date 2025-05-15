@@ -103,7 +103,7 @@ def test_product_price_setter_invalid(product, capsys):
 
 def test_category_initialization(category, product, smartphone):
     assert category.category_name == "Смартфоны"
-    assert len(category._Category__products_list) == 2
+    assert len(category._Category__products_list) == 2  # Исправлено здесь
     assert Category.category_count >= 1
     assert Category.product_count >= 2
 
@@ -167,12 +167,13 @@ def test_category_counters():
 def test_product_repr(product):
     repr_str = repr(product)
     assert "Product" in repr_str
-    assert "Iphone 16" in repr_str
-    assert "250000.0" in repr_str
+    assert "product_name='Iphone 16'" in repr_str
+    assert "product_price=250000.0" in repr_str
+    assert "product_quantity=7" in repr_str
 
 
 def test_category_repr(category):
     repr_str = repr(category)
     assert "Category" in repr_str
-    assert "Смартфоны" in repr_str
-    assert str(len(category._Category__products_list)) in repr_str
+    assert "category_name='Смартфоны'" in repr_str
+    assert "products_count=2" in repr_str
