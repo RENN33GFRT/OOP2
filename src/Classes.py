@@ -87,7 +87,7 @@ class Product(BaseProduct, LoggingMixin):
             raise TypeError("Можно складывать только товары одного типа.")
 
     @classmethod
-    def new_product(cls, params: dict):
+    def create_new_product(cls, params: dict):
         """
         Создает новый товар из словаря параметров.
 
@@ -104,43 +104,31 @@ class Product(BaseProduct, LoggingMixin):
     @property
     def price(self):
         """Геттер для цены продукта."""
-        return self.price
+        return self._price
 
     @price.setter
     def price(self, new_price):
         """Сеттер для цены продукта с проверкой."""
-
-        # Проверка на неотрицательную цену
-
         if new_price <= 0:
             print("Цена не должна быть нулевой или отрицательной.")
             return
 
-            # Предупреждение при снижении цены ниже предыдущей и подтверждение изменения пользователем.
-        if self.price < self.price:
+        if hasattr(self, '_price') and new_price < self._price:
             user_response = input("Вы ввели цену ниже прошлой. Подтвердите изменение цены (y/n): ")
-            if user_response.lower() == "y":
+            if user_response.lower() != "y":
                 return
+
+        self._price = new_price
 
 
 class Category:
     """
     Класс для организации группы продуктов в категорию.
-
-    Атрибуты:
-      - category_name: название категории
-      - category_description: описание категории
-      - __products_list: приватный список продуктов в категории
-      - class-level счетчики количества категорий и продуктов
     """
-
-    product_count = 0  # Общее число добавленных продуктов во все категории
-    category_count = 0  # Общее число созданных категорий
+    product_count = 0
+    category_count = 0
 
     def __init__(self, category_name, category_description, products=None):
-        """
-        Инициализация категории и добавление начальных продуктов при наличии.
-        """
         self.category_name = category_name
         self.category_description = category_description
         self.__products_list = []
@@ -152,21 +140,11 @@ class Category:
         Category.category_count += 1
 
     def __str__(self):
-        """
-        Строковое представление категории с подсчетом общего количества товаров.
-        """
-        total_items = sum(product.product_quantity for product in self.__products_list)
+        total_items = sum(product.quantity for product in self.__products_list)
         return f"{self.category_name}, количество товаров: {total_items} шт."
 
     def add_product(self, product_item):
-        """
-        Добавляет продукт в категорию после проверки типа.
-
-        :param product_item: Объект класса Product или его наследника
-        :raises TypeError: если объект не является экземпляром класса Product или его подкласса
-        """
-
-        if not isinstance(product_item, Product) or not issubclass(type(product_item), Product):
+        if not isinstance(product_item, Product):
             raise TypeError("Можно добавлять только объекты типа Product или его подклассы.")
 
         self.__products_list.append(product_item)
@@ -174,41 +152,53 @@ class Category:
 
     @property
     def products(self):
-        """
-        Возвращает список строк с информацией о продуктах в категории.
-        """
         return [
-            f"{prod.product_name}, {prod.price} руб. Остаток: {prod.product_quantity} шт."
+            f"{prod.name}, {prod.price} руб. Остаток: {prod.quantity} шт."
             for prod in self.__products_list
         ]
 
 
 class Smartphone(Product):
-    """
-    Класс для смартфонов с дополнительными характеристиками.
-
-    Наследует основные свойства от класса Product и добавляет параметры эффективности,
-     модели, памяти и цвета.
-    """
-
     def __init__(self, name, description, price, quantity, efficiency_level, model_code, memory_size, color_variant):
         super().__init__(name, description, price, quantity)
-        self.efficiency = efficiency_level  # уровень эффективности (например батареи)
-        self.model = model_code  # модель смартфона
-        self.memory = memory_size  # объем памяти (например ГБ)
-        self.color = color_variant  # цвет устройства
+        self.efficiency = efficiency_level
+        self.model = model_code
+        self.memory = memory_size
+        self.color = color_variant
+
+    @classmethod
+    def create_new_product(cls, params: dict):
+        """Реализация абстрактного метода для Smartphone"""
+        base_params = {
+            'name': params['name'],
+            'description': params['description'],
+            'price': params['price'],
+            'quantity': params['quantity']
+        }
+        return cls(**base_params,
+                 efficiency_level=params.get('efficiency_level', 0),
+                 model_code=params.get('model_code', ''),
+                 memory_size=params.get('memory_size', 0),
+                 color_variant=params.get('color_variant', ''))
 
 
 class LawnGrass(Product):
-    """
-    Класс для травы газона с дополнительными характеристиками.
-
-    Наследует основные свойства от класса Product и добавляет параметры страны происхождения,
-    периода прорастания и цвета травы.
-    """
-
     def __init__(self, name, description, price, quantity, country_of_origin, germination_duration_days, grass_color):
         super().__init__(name, description, price, quantity)
-        self.country = country_of_origin  # страна происхождения травы
-        self.germination_period = germination_duration_days  # период прорастания (дней)
-        self.color = grass_color  # цвет травы
+        self.country = country_of_origin
+        self.germination_period = germination_duration_days
+        self.color = grass_color
+
+    @classmethod
+    def create_new_product(cls, params: dict):
+        """Реализация абстрактного метода для LawnGrass"""
+        base_params = {
+            'name': params['name'],
+            'description': params['description'],
+            'price': params['price'],
+            'quantity': params['quantity']
+        }
+        return cls(**base_params,
+                 country_of_origin=params.get('country_of_origin', ''),
+                 germination_duration_days=params.get('germination_duration_days', 0),
+                 grass_color=params.get('grass_color', ''))
