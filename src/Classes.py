@@ -17,6 +17,7 @@ class BaseProduct(ABC):
         self.__price = product_price
         self.quantity = product_quantity
 
+
     @classmethod
     @abstractmethod
     def create_new_product(cls, params: dict):
@@ -47,7 +48,6 @@ class LoggingMixin:
         print(f"Создан объект {self.__class__.__name__} с параметрами:")
         print(f"Args: {args}")
         print(f"Kwargs: {kwargs}")
-        super().__init__(*args)
 
     def __repr__(self):
         attrs = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
