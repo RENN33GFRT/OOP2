@@ -6,17 +6,9 @@ class BaseProduct(ABC):
     Абстрактный базовый класс для продуктов.
     Определяет интерфейс и общие свойства для всех продуктов.
     """
-
     @abstractmethod
     def __init__(self, product_name, product_description, product_price, product_quantity):
-        """
-        Инициализация базовых свойств продукта.
-        """
-        super().__init__()  # Для миксина LoggingMixin
-        self.name = product_name
-        self.description = product_description
-        self._price = product_price  # Защищённый атрибут вместо приватного
-        self.quantity = product_quantity
+        super().__init__(product_name, product_description, product_price, product_quantity)
 
     @classmethod
     @abstractmethod
@@ -52,9 +44,10 @@ class Product(BaseProduct, LoggingMixin):
     """
 
     def __init__(self, product_name, product_description, product_price, product_quantity):
-        """
-        Инициализация товара. Атрибуты устанавливаются через super().__init__() в BaseProduct.
-        """
+        self.name = product_name
+        self.description = product_description
+        self.__price = product_price
+        self.quantity = product_quantity
         super().__init__(product_name, product_description, product_price, product_quantity)
 
     def __str__(self):
