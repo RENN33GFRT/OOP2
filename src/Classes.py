@@ -12,32 +12,23 @@ class BaseProduct(ABC):
         """
         Инициализация базовых свойств продукта.
         """
-        super().__init__()  # Для правильной работы миксина
+        super().__init__()  # Для миксина LoggingMixin
         self.name = product_name
         self.description = product_description
-        self.__price = product_price
+        self._price = product_price  # Защищённый атрибут вместо приватного
         self.quantity = product_quantity
 
     @classmethod
     @abstractmethod
     def create_new_product(cls, params: dict):
-        """
-        Создает новый экземпляр продукта на основе переданных параметров.
-        """
         pass
 
     @abstractmethod
     def __str__(self):
-        """
-        Возвращает строковое представление продукта.
-        """
         pass
 
     @abstractmethod
     def __add__(self, other):
-        """
-        Складывает стоимости двух продуктов одинакового типа.
-        """
         pass
 
 
@@ -45,9 +36,10 @@ class LoggingMixin:
     """Миксин для логирования создания объектов"""
 
     def __init__(self, *args, **kwargs):
-        print(f"Создан объект {self.__class__.__name__} с параметрами:")
+        print(f"\nСоздан объект {self.__class__.__name__} с параметрами:")
         print(f"Args: {args}")
-        print(f"Kwargs: {kwargs}")
+        print(f"Kwargs: {kwargs}\n")
+        super().__init__(*args, **kwargs)  # Для корректной работы MRO
 
     def __repr__(self):
         attrs = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
@@ -61,147 +53,50 @@ class Product(BaseProduct, LoggingMixin):
 
     def __init__(self, product_name, product_description, product_price, product_quantity):
         """
-        Инициализация товара и вызов метода логирования.
+        Инициализация товара. Атрибуты устанавливаются через super().__init__() в BaseProduct.
         """
-        self.name = product_name
-        self.description = product_description
-        self.__price = product_price
-        self.quantity = product_quantity
         super().__init__(product_name, product_description, product_price, product_quantity)
 
     def __str__(self):
-        """
-        Возвращает строковое описание товара.
-        """
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other):
-        """
-        Складывает стоимости двух товаров одинакового типа.
-
-        :param other: Другой объект класса Product
-        :return: сумма стоимости обоих товаров
-        :raises TypeError: если объекты разных типов
-        """
         if isinstance(other, type(self)):
-            total_value_self = self.price * self.quantity
-            total_value_other = other.price * other.quantity
-            return total_value_self + total_value_other
-        else:
-            raise TypeError("Можно складывать только товары одного типа.")
+            return (self.price * self.quantity) + (other.price * other.quantity)
+        raise TypeError("Можно складывать только товары одного типа.")
 
     @classmethod
     def create_new_product(cls, params: dict):
-        """
-        Создает новый товар из словаря параметров.
-
-        :param params: словарь с ключами 'name', 'description', 'price', 'quantity'
-        :return: экземпляр класса Product
-        """
-        name_ = params["name"]
-        description_ = params["description"]
-        price_ = params["price"]
-        quantity_ = params["quantity"]
-
-        return cls(name_, description_, price_, quantity_)
+        return cls(
+            params["name"],
+            params["description"],
+            params["price"],
+            params["quantity"]
+        )
 
     @property
     def price(self):
-        """Геттер для цены продукта."""
-        return self.__price
+        return self._price  # Используем защищённый атрибут
 
     @price.setter
     def price(self, new_price):
-        """Сеттер для цены продукта с проверкой."""
         if new_price <= 0:
             print("Цена не должна быть нулевой или отрицательной.")
             return
 
-        if hasattr(self, '_Product__price') and new_price < self._Product__price:
+        if hasattr(self, '_price') and new_price < self._price:
             user_response = input("Вы ввели цену ниже прошлой. Подтвердите изменение цены (y/n): ")
             if user_response.lower() != "y":
                 print("Изменение цены отменено.")
                 return
 
-        self._Product__price = new_price
+        self._price = new_price
 
 
-class Category:
-    """
-    Класс для организации группы продуктов в категорию.
-    """
-    product_count = 0
-    category_count = 0
-
-    def __init__(self, category_name, category_description, products=None):
-        self.category_name = category_name
-        self.category_description = category_description
-        self.__products_list = []
-
-        if products:
-            for prod in products:
-                self.add_product(prod)
-
-        Category.category_count += 1
-
-    def __str__(self):
-        total_items = sum(product.quantity for product in self.__products_list)
-        return f"{self.category_name}, количество товаров: {total_items} шт."
-
-    def add_product(self, product_item):
-        if not isinstance(product_item, Product):
-            raise TypeError("Можно добавлять только объекты типа Product или его подклассы.")
-
-        self.__products_list.append(product_item)
-        Category.product_count += 1
-
-    @property
-    def products(self):
-        return [
-            f"{prod.name}, {prod.price} руб. Остаток: {prod.quantity} шт."
-            for prod in self.__products_list
-        ]
-
-
-class Smartphone(Product):
-    def __init__(self, name, description, price, quantity, efficiency_level=0, model_code='', memory_size=0, color_variant=''):
-        super().__init__(name, description, price, quantity)
-        self.efficiency = efficiency_level
-        self.model = model_code
-        self.memory = memory_size
-        self.color = color_variant
-
-    @classmethod
-    def create_new_product(cls, params: dict):
-        """Реализация абстрактного метода для Smartphone"""
-        return cls(
-            name=params['name'],
-            description=params['description'],
-            price=params['price'],
-            quantity=params['quantity'],
-            efficiency_level=params.get('efficiency_level', 0),
-            model_code=params.get('model_code', ''),
-            memory_size=params.get('memory_size', 0),
-            color_variant=params.get('color_variant', '')
-        )
-
-
-class LawnGrass(Product):
-    def __init__(self, name, description, price, quantity, country_of_origin='', germination_duration_days=0, grass_color=''):
-        super().__init__(name, description, price, quantity)
-        self.country = country_of_origin
-        self.germination_period = germination_duration_days
-        self.color = grass_color
-
-    @classmethod
-    def create_new_product(cls, params: dict):
-        """Реализация абстрактного метода для LawnGrass"""
-        return cls(
-            name=params['name'],
-            description=params['description'],
-            price=params['price'],
-            quantity=params['quantity'],
-            country_of_origin=params.get('country_of_origin', ''),
-            germination_duration_days=params.get('germination_duration_days', 0),
-            grass_color=params.get('grass_color', '')
-        )
+# Пример использования
+if __name__ == "__main__":
+    # Проверка миксина и геттера price
+    product = Product("Телефон", "Смартфон", 50000, 10)
+    print(product)  # Проверка __str__
+    print(f"Цена через геттер: {product.price}")  # Проверка геттера
+    product.price = 45000  # Проверка сеттера
