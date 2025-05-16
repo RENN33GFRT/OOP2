@@ -12,11 +12,11 @@ class BaseProduct(ABC):
         """
         Инициализация базовых свойств продукта.
         """
+        super().__init__()  # Для правильной работы миксина
         self.name = product_name
         self.description = product_description
         self.__price = product_price
         self.quantity = product_quantity
-
 
     @classmethod
     @abstractmethod
@@ -63,6 +63,10 @@ class Product(BaseProduct, LoggingMixin):
         """
         Инициализация товара и вызов метода логирования.
         """
+        self.name = product_name
+        self.description = product_description
+        self.__price = product_price
+        self.quantity = product_quantity
         super().__init__(product_name, product_description, product_price, product_quantity)
 
     def __str__(self):
