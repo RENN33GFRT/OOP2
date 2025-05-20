@@ -6,9 +6,13 @@ class BaseProduct(ABC):
     Абстрактный базовый класс для продуктов.
     Определяет интерфейс и общие свойства для всех продуктов.
     """
+
     @abstractmethod
     def __init__(self, product_name, product_description, product_price, product_quantity):
-        super().__init__(product_name, product_description, product_price, product_quantity)
+        self.name = product_name
+        self.description = product_description
+        self._price = product_price
+        self.quantity = product_quantity
 
     @classmethod
     @abstractmethod
@@ -30,7 +34,8 @@ class LoggingMixin:
     def __init__(self, *args, **kwargs):
         print(f"\nСоздан объект {self.__class__.__name__} с параметрами:")
         print(f"Args: {args}")
-        print(f"Kwargs: {kwargs}\n")  # Для корректной работы MRO
+        print(f"Kwargs: {kwargs}\n")
+        super().__init__(*args, **kwargs)
 
     def __repr__(self):
         attrs = ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
@@ -43,18 +48,14 @@ class Product(BaseProduct, LoggingMixin):
     """
 
     def __init__(self, product_name, product_description, product_price, product_quantity):
-        self.name = product_name
-        self.description = product_description
-        self.__price = product_price
-        self.quantity = product_quantity
         super().__init__(product_name, product_description, product_price, product_quantity)
 
     def __str__(self):
-        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+        return f"{self.name}, {self._price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other):
         if isinstance(other, type(self)):
-            return (self.price * self.quantity) + (other.price * other.quantity)
+            return (self._price * self.quantity) + (other._price * other.quantity)
         raise TypeError("Можно складывать только товары одного типа.")
 
     @classmethod
@@ -68,7 +69,7 @@ class Product(BaseProduct, LoggingMixin):
 
     @property
     def price(self):
-        return self.__price  # Используем защищённый атрибут
+        return self._price
 
     @price.setter
     def price(self, new_price):
@@ -85,104 +86,79 @@ class Product(BaseProduct, LoggingMixin):
         self._price = new_price
 
 
-# Пример использования
-if __name__ == "__main__":
-    # Проверка миксина и геттера pprice
-    product = Product("Телефон", "Смартфон", 50000, 10)
-    print(product)  # Проверка __str__
-    print(f"Цена через геттер: {product.price}")  # Проверка геттера
-    product.price = 45000  # Проверка сеттера
-
 class Category:
     """
     Класс категории товаров. Подсчитывает количество категорий и продуктов внутри них.
     """
 
-    category_counter = 0  # Общее число созданных категорий (статический счетчик)
-    product_counter = 0  # Общее число добавленных продуктов (статический счетчик)
+    category_count = 0
+    product_count = 0
 
     def __init__(self, category_name, category_description, products=None):
-        """
-        Инициализация категории с названием, описанием и списком продуктов.
-        :param category_name: Название категории
-        :param category_description: описание категории
-        :param products: список объектов Product (по умолчанию None)
-        """
         self.category_name = category_name
         self.category_description = category_description
-        self._products_list = []
+        self.__products = []
+
         if products:
-            for prod in products:
-                self.add_product(prod)
-        self.category_counter += 1
+            for product in products:
+                self.add_product(product)
+
+        Category.category_count += 1
 
     def __str__(self):
-        """
-        Возвращает строку с названием категории и суммарным количеством товаров.
-        """
-        total_quantity = sum(prod.quantity for prod in self._products_list)
+        total_quantity = sum(product.quantity for product in self.__products)
         return f"{self.category_name}, количество продуктов: {total_quantity} шт."
 
-    def add_product(self, product_obj):
-        """
-        Добавляет продукт в категорию после проверки типа.
-        Увеличивает счетчик общего числа продуктов.
-        :param product_obj: Объект класса Product или его наследника
-        """
-        if not isinstance(product_obj, Product) or not issubclass(type(product_obj), Product):
+    def add_product(self, product):
+        if not isinstance(product, Product):
             raise TypeError("Можно добавлять только объекты типа Product")
-        else:
-            self._products_list.append(product_obj)
-            Category.product_counter += 1
+        self.__products.append(product)
+        Category.product_count += 1
 
     @property
-    def products_info(self):
-        """
-         Возвращает список строк с информацией о каждом продукте в категории.
-         Каждая строка содержит название, цену и остаток по количеству.
-         """
-        info_list = []
-        for item in self._products_list:
-            info_list.append(f"{item.name}, {item.price} руб. Остаток: {item.quantity} шт.\n")
-        return info_list
-
-
-def average_price(self):
-    """
-    Вычисляет среднюю цену всех продуктов в категории.
-    Возвращает 0 при отсутствии товаров.
-    """
-    try:
-        count_products = len(self._products_list)
-        total_price_sum = sum(prod.price for prod in self._products_list)
-        return total_price_sum / count_products if count_products > 0 else 0
-    except Exception:
-        return 0
+    def products(self):
+        return [f"{p.name}, {p.price} руб. Остаток: {p.quantity} шт." for p in self.__products]
 
 
 class Smartphone(Product):
-    """
-    Наследник класса Product для смартфонов с дополнительными характеристиками.
-    """
-
-    def __init__(self, name, description, price, quantity, efficiency_level, model_name, memory_size, color_variant):
+    def __init__(self, name, description, price, quantity,
+                 efficiency=0, model='', memory=0, color=''):
         super().__init__(name, description, price, quantity)
-        self.efficiency_level = efficiency_level  # уровень эффективности (например батареи)
-        self.model_name = model_name  # модель смартфона
-        self.memory_size = memory_size  # объем памяти
-        self.color_variant = color_variant  # цвет
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+    @classmethod
+    def create_new_product(cls, params: dict):
+        return cls(
+            name=params.get('name'),
+            description=params.get('description'),
+            price=params.get('price'),
+            quantity=params.get('quantity'),
+            efficiency=params.get('efficiency', 0),
+            model=params.get('model', ''),
+            memory=params.get('memory', 0),
+            color=params.get('color', '')
+        )
 
 
 class LawnGrass(Product):
-    """
-    Наследник класса Product для травы/газона с дополнительными характеристиками.
-    """
-
     def __init__(self, name, description, price, quantity,
-                 country_of_origin,
-                 germination_period_days,
-                 grass_color):
+                 country='', germination_period=0, color=''):
         super().__init__(name, description, price, quantity)
-        self.country_of_origin = country_of_origin  # страна происхождения
-        self.germination_period_days = germination_period_days  # период прорастания (дней)
-        self.grass_color = grass_color  # цвет травы/газона
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
+
+    @classmethod
+    def create_new_product(cls, params: dict):
+        return cls(
+            name=params.get('name'),
+            description=params.get('description'),
+            price=params.get('price'),
+            quantity=params.get('quantity'),
+            country=params.get('country', ''),
+            germination_period=params.get('germination_period', 0),
+            color=params.get('color', '')
+        )
