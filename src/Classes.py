@@ -87,78 +87,46 @@ class Product(BaseProduct, LoggingMixin):
 
 
 class Category:
-    """
-    Класс категории товаров. Подсчитывает количество категорий и продуктов внутри них.
-    """
+    """Класс для категорий товаров"""
+    total_categories = 0
+    total_unique_products = 0
 
-    category_count = 0
-    product_count = 0
-
-    def __init__(self, category_name, category_description, products=None):
-        self.category_name = category_name
-        self.category_description = category_description
-        self.__products = []
-
-        if products:
-            for product in products:
-                self.add_product(product)
-
-        Category.category_count += 1
-
-    def __str__(self):
-        total_quantity = sum(product.quantity for product in self.__products)
-        return f"{self.category_name}, количество продуктов: {total_quantity} шт."
+    def __init__(self, name, description, products=None):
+        self.name = name
+        self.description = description
+        self.__products = products if products else []
+        Category.total_categories += 1
+        Category.total_unique_products += len(set(p.name for p in self.__products))
 
     def add_product(self, product):
         if not isinstance(product, Product):
-            raise TypeError("Можно добавлять только объекты типа Product")
+            raise ValueError("Можно добавлять только товары")
         self.__products.append(product)
-        Category.product_count += 1
+        if product.name not in [p.name for p in self.__products[:-1]]:
+            Category.total_unique_products += 1
 
     @property
     def products(self):
-        return [f"{p.name}, {p.price} руб. Остаток: {p.quantity} шт." for p in self.__products]
+        return "\n".join(str(p) for p in self.__products)
+
+    def __str__(self):
+        return f"{self.name}, количество продуктов: {len(self.__products)} шт."
 
 
 class Smartphone(Product):
-    def __init__(self, name, description, price, quantity,
-                 efficiency=0, model='', memory=0, color=''):
+    """Класс для смартфонов"""
+    def __init__(self, name, description, price, quantity, performance, model, memory, color):
         super().__init__(name, description, price, quantity)
-        self.efficiency = efficiency
+        self.performance = performance
         self.model = model
         self.memory = memory
         self.color = color
 
-    @classmethod
-    def create_new_product(cls, params: dict):
-        return cls(
-            name=params.get('name'),
-            description=params.get('description'),
-            price=params.get('price'),
-            quantity=params.get('quantity'),
-            efficiency=params.get('efficiency', 0),
-            model=params.get('model', ''),
-            memory=params.get('memory', 0),
-            color=params.get('color', '')
-        )
-
 
 class LawnGrass(Product):
-    def __init__(self, name, description, price, quantity,
-                 country='', germination_period=0, color=''):
+    """Класс для газонной травы"""
+    def __init__(self, name, description, price, quantity, country, germination_period, color):
         super().__init__(name, description, price, quantity)
         self.country = country
         self.germination_period = germination_period
         self.color = color
-
-    @classmethod
-    def create_new_product(cls, params: dict):
-        return cls(
-            name=params.get('name'),
-            description=params.get('description'),
-            price=params.get('price'),
-            quantity=params.get('quantity'),
-            country=params.get('country', ''),
-            germination_period=params.get('germination_period', 0),
-            color=params.get('color', '')
-        )
